@@ -12,48 +12,31 @@ import { Toaster } from "react-hot-toast";
 import AuthService from "./services/AuthService";
 
 const App = () => {
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState();
 
   useEffect(() => {
-    AuthService.getProfile()
-      .then((res) => {
-        setUserData(res.data.user);
-      })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
+    AuthService.getProfile().then((res) => {
+      setUserData(res.data.user)
+    })
+  },[])
+  
   return (
     <Router>
-      {/* Conditionally render login and register pages if userData is not available */}
-      {userData ? (
-        <div className="flex">
-          <div>{userData && <Sidebar user={userData} />}</div>
-          <Routes className="content">
-            <Route path="/" exact element={<Home user={userData} />} />
-            {userData.ismanager && (
-              <Route path="employees" element={<EmployeeListTab />} />
-            )}
-            {userData.ismanager && (
-              <Route path="departments" element={<Departments />} />
-            )}
-          </Routes>
-        </div>
-      ) : (
-        <Routes>
-          <Route path="login" element={<Login />} />
+      <div className="flex">
+        <div>{userData && <Sidebar user={userData} />}</div>
+        <Routes className="content">
           <Route path="register" element={<Register />} />
+          <Route path="login" element={<Login />} />
+
+          <Route path="/" exact element={<Home user={userData} />} />
+          {userData?.ismanager && (
+            <Route path="employees" element={<EmployeeListTab />} />
+          )}
+          {userData?.ismanager && (
+            <Route path="departments" element={<Departments />} />
+          )}
         </Routes>
-      )}
+      </div>
       <Toaster />
     </Router>
   );

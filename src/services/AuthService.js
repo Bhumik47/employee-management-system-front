@@ -12,7 +12,7 @@ const registerUser = async (body) => {
             withCredentials: true,
         });
     return response;
-} 
+}
 
 const login = async (body) => {
     const response = await axios.post(`${API_URL}login`, body, {
@@ -38,12 +38,50 @@ const getProfile = async () => {
         withCredentials: true,
     });
     return response;
-} 
+}
+const getAllUsers = async () => {
+    const response = await axios.get(`${API_URL}all`, {
+        withCredentials: true,
+    });
+    return response;
+}
 
+const addEmployee = async (body) => {
+    const response = await axios.post(`${API_URL}create`, body, {
+        withCredentials: true,
+    });
+    return response;
+}
+
+const editEmployee = async (body) => {
+    const response = await axios.put(`${API_URL}update`, body, {
+        withCredentials: true,
+    });
+    return response;
+}
+
+const deleteEmployee = async (id) => {
+    const response = await axios.delete(`${API_URL}delete/${id}`, {
+        withCredentials: true,
+    });
+    return response;
+}
+
+const filterEmployees = async (body) => {
+    const response = await axios.post(`${API_URL}filter`,body, {
+        withCredentials: true,
+    });
+    return response;
+}
 const AuthService = {
     registerUser,
     login,
+    addEmployee,
+    editEmployee,
+    deleteEmployee,
     getProfile,
+    getAllUsers,
+    filterEmployees,
     logout
 }
 

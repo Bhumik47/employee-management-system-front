@@ -1,14 +1,36 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EmployeeModal from "../EmployeeModal";
 import ProfileModal from "../ProfileModal";
+import AuthService from "../../services/AuthService";
+import toast from "react-hot-toast";
 
-const EmployeeList = ({ name, employee }) => {
+const EmployeeList = ({
+  getDepartments,
+  department,
+  name,
+  employees,
+  getAllUsers,
+}) => {
+  const [filteredEmployees, setFilteredEmployees] = useState(employees);
+  console.log(filteredEmployees);
+  const [userData, setUserData] = useState({});
+
   const [isOpen, setOpen] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [filterType, setFilterType] = useState("name"); // Default filter type
   const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
+  console.log(filterType, sortOrder);
+  const [isEdit, setEdit] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [selectedProfile, setSelectedProfile] = useState({});
 
-  const handleOpen = () => {
+  useEffect(() => {
+    setFilteredEmployees(employees);
+  }, [employees]);
+
+  const handleOpen = (editData) => {
+    setEditData(editData);
+    setEdit(!!editData); // Set isEdit to true if editData is provided
     setOpen(true);
   };
 
@@ -16,7 +38,8 @@ const EmployeeList = ({ name, employee }) => {
     setOpen(false);
   };
 
-  const handleProfileOpen = () => {
+  const handleProfileOpen = (employee) => {
+    setSelectedProfile(employee);
     setOpenProfile(true);
   };
 
@@ -24,18 +47,47 @@ const EmployeeList = ({ name, employee }) => {
     setOpenProfile(false);
   };
 
-  // Dummy employee data
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@example.com",
-      salary: 80000,
-      date: "2022-01-01",
-    },
-    // Add more employees as needed
-  ]);
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const addEmployee = async (e) => {
+    e.preventDefault();
+
+    // Email validation check
+    if (!validateEmail(userData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // Password match check
+    if (userData.password !== userData.confirmPassword) {
+      toast.error("Confirm Password do not match");
+      return;
+    }
+
+    try {
+      const response = await AuthService.addEmployee(userData);
+
+      if (response.status === 201) {
+        if (department) {
+          await getDepartments();
+        } else {
+          await getAllUsers();
+        }
+        toast.success(response.data.message);
+        handleClose();
+      } else {
+        console.error("Error submitting form:", response.error);
+        handleClose();
+      }
+    } catch (error) {
+      toast.error(error.message);
+      console.error("Error submitting form:", error.message);
+      handleClose();
+    }
+  };
 
   const [newEmployee, setNewEmployee] = useState({
     firstName: "",
@@ -45,18 +97,51 @@ const EmployeeList = ({ name, employee }) => {
     date: "",
   });
 
-  const handleEdit = (employeeId) => {
-    // Handle edit action
-    console.log(`Edit employee with ID ${employeeId}`);
+  const handleEdit = async () => {
+    // Email validation check
+    if (!validateEmail(userData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    try {
+      const response = await AuthService.editEmployee(userData);
+      if (response.status === 201) {
+        if (department) {
+          await getDepartments();
+        } else {
+          await getAllUsers();
+        }
+        toast.success(response.data.message);
+        handleClose();
+      } else {
+        console.error("Error submitting form:", response.error);
+        handleClose();
+      }
+    } catch (error) {
+      toast.error(error.message);
+      console.error("Error submitting form:", error.message);
+      handleClose();
+    }
   };
 
-  const handleDelete = (employeeId) => {
-    // Handle delete action
-    console.log(`Delete employee with ID ${employeeId}`);
-    // Update state to remove the deleted employee
-    setEmployees((prevEmployees) =>
-      prevEmployees.filter((employee) => employee.id !== employeeId)
-    );
+  const handleFilter = async () => {
+    const res = await AuthService.filterEmployees({
+      sortBy: filterType,
+      sortOrder: sortOrder,
+    });
+
+    setFilteredEmployees(res.data.data);
+  };
+
+  const handleDelete = async (employeeId) => {
+    const res = await AuthService.deleteEmployee(employeeId);
+    if (department) {
+      await getDepartments();
+    } else {
+      await getAllUsers();
+    }
+    toast.success(res.data.message);
   };
 
   const handleAddEmployee = () => {
@@ -83,74 +168,72 @@ const EmployeeList = ({ name, employee }) => {
   });
 
   // Apply filters based on selected filter type and sort order
-  const filteredEmployees = employees.sort((a, b) => {
-    const nameA =
-      filterType === "name" ? `${a.firstName} ${a.lastName}` : a.email;
-    const nameB =
-      filterType === "name" ? `${b.firstName} ${b.lastName}` : b.email;
-
-    if (sortOrder === "asc") {
-      return nameA.localeCompare(nameB);
-    } else {
-      return nameB.localeCompare(nameA);
-    }
-  });
 
   return (
     <div className="container mx-auto mt-8 p-8 bg-white shadow-lg rounded-lg">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-3xl font-semibold text-gray-800">{name}</h2>
       </div>
-      <div className="flex justify-between">
-        <button
-          onClick={handleOpen}
-          className="bg-blue-500 text-white rounded-full py-2 px-4 hover:bg-blue-600 transition duration-300 ease-in-out mb-4"
-        >
-          Add Employee
-        </button>
-        <div className="flex space-x-4 items-center">
-          {/* Filter Dropdowns */}
-          <div className="relative">
-            <label className="text-gray-600 mr-2">Filter by:</label>
-            <select
-              className="border p-2 rounded-md bg-white focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-            >
-              <option className="py-2">Name</option>
-              <option className="py-2">Location</option>
-            </select>
-          </div>
-
-          <div className="relative">
-            <label className="text-gray-600 mr-2">Sort order:</label>
-            <select
-              className="border p-2 rounded-md bg-white focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-            >
-              <option className="py-2">Ascending</option>
-              <option className="py-2">Descending</option>
-            </select>
-          </div>
-
-          {/* Apply Filters Button */}
+      {!department && (
+        <div className="flex justify-between">
           <button
-         
-            className="bg-blue-500 text-white rounded-full py-2 px-4 hover:bg-blue-600 transition duration-300 ease-in-out"
+            onClick={() => handleOpen()}
+            className="bg-blue-500 text-white rounded-full py-2 px-4 hover:bg-blue-600 transition duration-300 ease-in-out mb-4"
           >
-            Apply Filters
+            Add Employee
           </button>
+
+          <div className="flex space-x-4 items-center">
+            {/* Filter Dropdowns */}
+            <div className="relative">
+              <label className="text-gray-600 mr-2">Filter by:</label>
+              <select
+                className="border p-2 rounded-md bg-white focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <option value="name" className="py-2">
+                  Name
+                </option>
+                <option value="address" className="py-2">
+                  Location
+                </option>
+              </select>
+            </div>
+
+            <div className="relative">
+              <label className="text-gray-600 mr-2">Sort order:</label>
+              <select
+                className="border p-2 rounded-md bg-white focus:outline-none focus:ring focus:border-blue-300 transition duration-300"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+              >
+                <option value="asc" className="py-2">
+                  Ascending
+                </option>
+                <option value="desc" className="py-2">
+                  Descending
+                </option>
+              </select>
+            </div>
+
+            {/* Apply Filters Button */}
+            <button
+              onClick={handleFilter}
+              className="bg-blue-500 text-white rounded-full py-2 px-4 hover:bg-blue-600 transition duration-300 ease-in-out"
+            >
+              Apply Filters
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300 shadow-lg">
           <thead>
             <tr className="bg-gray-200">
               <th className="py-2 px-4 border-b">No.</th>
-              <th className="py-2 px-4 border-b">First Name</th>
-              <th className="py-2 px-4 border-b">Last Name</th>
+              <th className="py-2 px-4 border-b">Name</th>
               <th className="py-2 px-4 border-b">Email</th>
               <th className="py-2 px-4 border-b">Salary</th>
               <th className="py-2 px-4 border-b">Date</th>
@@ -158,39 +241,43 @@ const EmployeeList = ({ name, employee }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredEmployees.length > 0 ? (
-              filteredEmployees.map((employee, i) => (
+            {filteredEmployees?.length > 0 ? (
+              filteredEmployees?.map((employee, i) => (
                 <tr
-                  key={employee.id}
+                  key={employee._id}
                   className={i % 2 === 0 ? "bg-gray-100" : "bg-gray-50"}
                 >
                   <td className="py-2 px-4 border-b">{i + 1}</td>
-                  <td className="py-2 px-4 border-b">{employee.firstName}</td>
-                  <td className="py-2 px-4 border-b">{employee.lastName}</td>
+                  <td className="py-2 px-4 border-b">{employee.name}</td>
+
                   <td className="py-2 px-4 border-b">{employee.email}</td>
                   <td className="py-2 px-4 border-b">
                     {formatter.format(employee.salary)}
                   </td>
-                  <td className="py-2 px-4 border-b">{employee.date}</td>
+                  <td className="py-2 px-4 border-b">{employee.createdAt}</td>
                   <td className="py-2 px-4 border-b text-center">
                     <button
-                      onClick={handleProfileOpen}
+                      onClick={() => handleProfileOpen(employee)}
                       className="text-green-500 hover:underline mx-2"
                     >
                       View Profile
                     </button>
-                    <button
-                      onClick={() => handleEdit(employee.id)}
-                      className="text-blue-500 hover:underline mx-2"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(employee.id)}
-                      className="text-red-500 hover:underline mx-2"
-                    >
-                      Delete
-                    </button>
+                    {!department && (
+                      <button
+                        onClick={() => handleOpen(employee)}
+                        className="text-blue-500 hover:underline mx-2"
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {!department && (
+                      <button
+                        onClick={() => handleDelete(employee._id)}
+                        className="text-red-500 hover:underline mx-2"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
@@ -208,8 +295,20 @@ const EmployeeList = ({ name, employee }) => {
         name={"Employee Profile"}
         open={openProfile}
         handleProfileClose={handleProfileClose}
+        handleOpen={handleOpen}
+        employeeData={selectedProfile}
+        department={department}
       />
-      <EmployeeModal isOpen={isOpen} handleClose={handleClose} />
+      <EmployeeModal
+        userData={userData}
+        setUserData={setUserData}
+        isOpen={isOpen}
+        handleClose={handleClose}
+        onSave={addEmployee}
+        isEdit={isEdit}
+        editData={isEdit ? editData : null}
+        handleEdit={handleEdit}
+      />
     </div>
   );
 };

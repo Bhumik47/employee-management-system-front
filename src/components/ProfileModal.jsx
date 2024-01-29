@@ -1,21 +1,20 @@
 import React, { useEffect } from "react";
 
-const ProfileModal = ({ name, open, handleProfileClose }) => {
+const ProfileModal = ({
+  name,
+  open,
+  handleProfileClose,
+  employeeData,
+  handleOpen,
+  department,
+}) => {
+  console.log(employeeData);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "auto"; // Prevent scrolling when the modal is open
     return () => {
       document.body.style.overflow = "auto"; // Restore scrolling when the component is unmounted
     };
   }, [open]);
-
-  // Dummy employee data
-  const employeeData = {
-    name: "John Doe",
-    salary: 80000,
-    address: "123 Main St, Cityville",
-    department: "Engineering",
-    joiningDate: "2022-01-01",
-  };
 
   return (
     <div className={`fixed inset-0 overflow-y-auto ${open ? "" : "hidden"}`}>
@@ -55,30 +54,33 @@ const ProfileModal = ({ name, open, handleProfileClose }) => {
               </div>
               <div className="flex flex-col">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                  {employeeData.name}
+                  {employeeData?.name}
                 </h2>
                 <ul className="list-disc list-inside text-gray-600">
                   <li className="mb-2">
                     <span className="font-bold">Salary:</span> $
-                    {employeeData.salary}
+                    {employeeData?.salary}
                   </li>
                   <li className="mb-2">
                     <span className="font-bold">Address:</span>{" "}
-                    {employeeData.address}
+                    {employeeData?.address}
                   </li>
                   <li className="mb-2">
                     <span className="font-bold">Department:</span>{" "}
-                    {employeeData.department}
+                    {employeeData?.department?.name}
                   </li>
                   <li className="mb-2">
                     <span className="font-bold">Joining Date:</span>{" "}
-                    {employeeData.joiningDate}
+                    {employeeData?.createdAt}
                   </li>
                 </ul>
                 <div className="mt-6 flex items-center">
-                  <button className="bg-blue-500 text-white py-2 px-4 rounded-full hover:bg-blue-600 transition duration-300 ease-in-out">
+                 {!department && <button
+                    onClick={() => handleOpen(employeeData)}
+                    className="bg-blue-500 text-white py-2 px-4 rounded-full hover:bg-blue-600 transition duration-300 ease-in-out"
+                  >
                     Edit Profile
-                  </button>
+                  </button>}
                 </div>
               </div>
             </div>

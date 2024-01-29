@@ -1,8 +1,50 @@
-// EmployeeModal.js
+import React, { useEffect, useState } from "react";
+import DepartmentService from "../services/Department.service";
 
-import React from "react";
+const EmployeeModal = ({
+  isOpen,
+  handleClose,
+  setUserData,
+  onSave,
+  userData,
+  isEdit,
+  editData,
+  handleEdit,
+}) => {
+  const [departments, setDepartments] = useState([]);
+  console.log(departments);
 
-const EmployeeModal = ({ isOpen, handleClose, onChange, onSave }) => {
+  useEffect(() => {
+    DepartmentService.getDepartments().then((res) => {
+      setDepartments(res.data.data);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (isEdit && editData) {
+      // If isEdit is true, set initial values to editData
+      setUserData(editData);
+    }
+  }, [isEdit, editData, setUserData]);
+
+  const handleInputChange = (field, value) => {
+    console.log("Field:", field);
+    console.log("Value:", value);
+
+    setUserData({
+      ...userData,
+      [field]: value,
+    });
+  };
+
+  const handleSaveOrEdit = async (e) => {
+    if (isEdit) {
+      await handleEdit();
+    } else {
+      await onSave(e);
+    }
+  };
+
   return (
     <div
       className={`fixed inset-0 overflow-y-auto ${isOpen ? "" : "hidden"}`}
@@ -11,11 +53,12 @@ const EmployeeModal = ({ isOpen, handleClose, onChange, onSave }) => {
       aria-modal="true"
     >
       <div className="flex items-center justify-center min-h-screen w-full">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full">
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full min-h-screen">
           <form className="max-w-3xl m-auto">
             <h2 id="modal-title" className="text-2xl font-semibold mb-4">
-              Add Employee
+              {isEdit ? "Edit Employee" : "Add Employee"}
             </h2>
+
             {/* Name */}
             <div className="mb-4">
               <label className="block text-gray-800 text-sm font-semibold mb-2">
@@ -24,7 +67,10 @@ const EmployeeModal = ({ isOpen, handleClose, onChange, onSave }) => {
               <input
                 type="text"
                 className="w-full border border-gray-300 p-2 rounded"
-                onChange={(e) => onChange("name", e.target.value)}
+                value={userData.name || ""}
+                onChange={(e) =>
+                  console.log(e) & handleInputChange("name", e.target.value)
+                }
               />
             </div>
 
@@ -36,33 +82,44 @@ const EmployeeModal = ({ isOpen, handleClose, onChange, onSave }) => {
               <input
                 type="email"
                 className="w-full border border-gray-300 p-2 rounded"
-                onChange={(e) => onChange("email", e.target.value)}
+                value={userData.email || ""}
+                onChange={(e) => handleInputChange("email", e.target.value)}
               />
             </div>
 
             {/* Password */}
-            <div className="mb-4">
-              <label className="block text-gray-800 text-sm font-semibold mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                className="w-full border border-gray-300 p-2 rounded"
-                onChange={(e) => onChange("password", e.target.value)}
-              />
-            </div>
+            {!isEdit && (
+              <div className="mb-4">
+                <label className="block text-gray-800 text-sm font-semibold mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  className="w-full border border-gray-300 p-2 rounded"
+                  value={userData.password || ""}
+                  onChange={(e) =>
+                    handleInputChange("password", e.target.value)
+                  }
+                />
+              </div>
+            )}
 
             {/* Confirm Password */}
-            <div className="mb-4">
-              <label className="block text-gray-800 text-sm font-semibold mb-2">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                className="w-full border border-gray-300 p-2 rounded"
-                onChange={(e) => onChange("confirmPassword", e.target.value)}
-              />
-            </div>
+            {!isEdit && (
+              <div className="mb-4">
+                <label className="block text-gray-800 text-sm font-semibold mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  className="w-full border border-gray-300 p-2 rounded"
+                  value={userData.confirmPassword || ""}
+                  onChange={(e) =>
+                    handleInputChange("confirmPassword", e.target.value)
+                  }
+                />
+              </div>
+            )}
 
             {/* Address */}
             <div className="mb-4">
@@ -72,7 +129,8 @@ const EmployeeModal = ({ isOpen, handleClose, onChange, onSave }) => {
               <input
                 type="text"
                 className="w-full border border-gray-300 p-2 rounded"
-                onChange={(e) => onChange("address", e.target.value)}
+                value={userData.address || ""}
+                onChange={(e) => handleInputChange("address", e.target.value)}
               />
             </div>
 
@@ -84,7 +142,8 @@ const EmployeeModal = ({ isOpen, handleClose, onChange, onSave }) => {
               <input
                 type="number"
                 className="w-full border border-gray-300 p-2 rounded"
-                onChange={(e) => onChange("salary", e.target.value)}
+                value={userData.salary || ""}
+                onChange={(e) => handleInputChange("salary", e.target.value)}
               />
             </div>
 
@@ -95,12 +154,17 @@ const EmployeeModal = ({ isOpen, handleClose, onChange, onSave }) => {
               </label>
               <select
                 className="w-full border border-gray-300 p-2 rounded"
-                onChange={(e) => onChange("department", e.target.value)}
+                onChange={(e) => {
+                  console.log("Dropdown Change Event:", e);
+                  handleInputChange("department", e.target.value);
+                }}
+                value={userData.department}
               >
-                <option value="Engineering">Engineering</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Finance">Finance</option>
-                {/* Add more departments as needed */}
+                {departments?.map((department) => (
+                  <option key={department?._id} value={department?._id}>
+                    {department.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -108,9 +172,9 @@ const EmployeeModal = ({ isOpen, handleClose, onChange, onSave }) => {
               <button
                 type="button"
                 className="bg-green-500 text-white py-2 px-4 rounded-full hover:bg-green-600 transition duration-300 ease-in-out"
-                onClick={onSave}
+                onClick={handleSaveOrEdit}
               >
-                Save
+                {isEdit ? "Update" : "Save"}
               </button>
               <button
                 type="button"
