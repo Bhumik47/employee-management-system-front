@@ -60,6 +60,7 @@ const Departments = () => {
           setEmployees={setEmployees}
           employees={employees}
           getDepartments={getDepartments}
+          setShow={setShow}
           name={`Employees in Department`}
         />
       ) : (

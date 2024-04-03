@@ -1,28 +1,40 @@
 import React, { useEffect, useState } from "react";
-import EmployeeModal from "../EmployeeModal";
+import EmployeeModal from "../modals/EmployeeModal";
 import ProfileModal from "../ProfileModal";
 import AuthService from "../../services/AuthService";
 import toast from "react-hot-toast";
+import { IoArrowBack } from "react-icons/io5";
 
 const EmployeeList = ({
   getDepartments,
   department,
   name,
+  setShow,
   employees,
   getAllUsers,
 }) => {
   const [filteredEmployees, setFilteredEmployees] = useState(employees);
-  console.log(filteredEmployees);
   const [userData, setUserData] = useState({});
 
   const [isOpen, setOpen] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [filterType, setFilterType] = useState("name"); // Default filter type
   const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
-  console.log(filterType, sortOrder);
   const [isEdit, setEdit] = useState(false);
   const [editData, setEditData] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState({});
+
+  const formatDate = (dateString) => {
+    const dateObject = new Date(dateString);
+
+    const options = {
+      year: "numeric",
+      month: "long", // Specify "long" for the full month name
+      day: "numeric",
+    };
+
+    return dateObject.toLocaleDateString("en-US", options);
+  };
 
   useEffect(() => {
     setFilteredEmployees(employees);
@@ -89,14 +101,6 @@ const EmployeeList = ({
     }
   };
 
-  const [newEmployee, setNewEmployee] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    salary: 0,
-    date: "",
-  });
-
   const handleEdit = async () => {
     // Email validation check
     if (!validateEmail(userData.email)) {
@@ -144,40 +148,33 @@ const EmployeeList = ({
     toast.success(res.data.message);
   };
 
-  const handleAddEmployee = () => {
-    // Handle add employee action
-    console.log("Add new employee:", newEmployee);
-    // Generate a unique ID for the new employee
-    const newEmployeeWithId = { id: Date.now(), ...newEmployee };
-    // Update state to add the new employee
-    setEmployees((prevEmployees) => [...prevEmployees, newEmployeeWithId]);
-    // Clear the form
-    setNewEmployee({
-      firstName: "",
-      lastName: "",
-      email: "",
-      salary: 0,
-      date: "",
-    });
-  };
-
   const formatter = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: null,
   });
 
-  // Apply filters based on selected filter type and sort order
-
   return (
     <div className="container mx-auto mt-8 p-8 bg-white shadow-lg rounded-lg">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-3xl font-semibold text-gray-800">{name}</h2>
+        {department && (
+          <button
+            onClick={() => setShow(false)}
+            className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-full"
+          >
+            <IoArrowBack className="mr-2" />
+            Back
+          </button>
+        )}
       </div>
       {!department && (
         <div className="flex justify-between">
           <button
-            onClick={() => handleOpen()}
+            onClick={() => {
+              setUserData({});
+              handleOpen();
+            }}
             className="bg-blue-500 text-white rounded-full py-2 px-4 hover:bg-blue-600 transition duration-300 ease-in-out mb-4"
           >
             Add Employee
@@ -235,6 +232,7 @@ const EmployeeList = ({
               <th className="py-2 px-4 border-b">No.</th>
               <th className="py-2 px-4 border-b">Name</th>
               <th className="py-2 px-4 border-b">Email</th>
+              <th className="py-2 px-4 border-b">Address</th>
               <th className="py-2 px-4 border-b">Salary</th>
               <th className="py-2 px-4 border-b">Date</th>
               <th className="py-2 px-4 border-b text-center">Actions</th>
@@ -251,10 +249,14 @@ const EmployeeList = ({
                   <td className="py-2 px-4 border-b">{employee.name}</td>
 
                   <td className="py-2 px-4 border-b">{employee.email}</td>
+
+                  <td className="py-2 px-4 border-b">{employee.address}</td>
                   <td className="py-2 px-4 border-b">
                     {formatter.format(employee.salary)}
                   </td>
-                  <td className="py-2 px-4 border-b">{employee.createdAt}</td>
+                  <td className="py-2 px-4 border-b">
+                    {formatDate(employee.createdAt)}
+                  </td>
                   <td className="py-2 px-4 border-b text-center">
                     <button
                       onClick={() => handleProfileOpen(employee)}

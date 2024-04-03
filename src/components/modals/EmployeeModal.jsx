@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import DepartmentService from "../services/Department.service";
+import DepartmentService from "../../services/Department.service";
 
 const EmployeeModal = ({
   isOpen,
@@ -12,11 +12,11 @@ const EmployeeModal = ({
   handleEdit,
 }) => {
   const [departments, setDepartments] = useState([]);
-  console.log(departments);
 
   useEffect(() => {
     DepartmentService.getDepartments().then((res) => {
-      setDepartments(res.data.data);
+      setDepartments(res?.data?.data);
+      handleInputChange("department", res?.data?.data[0]?._id);
     });
   }, []);
 

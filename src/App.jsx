@@ -1,6 +1,6 @@
 // src/App.js
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Route, Routes, BrowserRouter, useNavigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import "./App.css"; // Create this file to style your app
 import Departments from "./components/DepartmentsTab";
@@ -10,35 +10,37 @@ import Register from "./components/Register";
 import Login from "./components/Login2";
 import { Toaster } from "react-hot-toast";
 import AuthService from "./services/AuthService";
+import EmployeeRoutes from "./routes/EmployeeRoutes";
+import ManagerRoutes from "./routes/ManagerRoutes";
+import { ProtectedAuth } from "./components/Protected/Protected";
 
 const App = () => {
-  const [userData, setUserData] = useState();
-
-  useEffect(() => {
-    AuthService.getProfile().then((res) => {
-      setUserData(res.data.user)
-    })
-  },[])
-  
   return (
-    <Router>
+    <>
       <div className="flex">
-        <div>{userData && <Sidebar user={userData} />}</div>
-        <Routes className="content">
-          <Route path="register" element={<Register />} />
-          <Route path="login" element={<Login />} />
-
-          <Route path="/" exact element={<Home user={userData} />} />
-          {userData?.ismanager && (
-            <Route path="employees" element={<EmployeeListTab />} />
-          )}
-          {userData?.ismanager && (
-            <Route path="departments" element={<Departments />} />
-          )}
+        <Routes>
+          <Route
+            path="register"
+            element={
+              <ProtectedAuth>
+                <Register />
+              </ProtectedAuth>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedAuth>
+                <Login />
+              </ProtectedAuth>
+            }
+          />
         </Routes>
+        <EmployeeRoutes />
+        <ManagerRoutes />
       </div>
       <Toaster />
-    </Router>
+    </>
   );
 };
 

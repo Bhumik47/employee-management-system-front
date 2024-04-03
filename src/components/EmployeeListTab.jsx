@@ -6,14 +6,15 @@ import AuthService from "../services/AuthService";
 
 const EmployeeListTab = () => {
   const [users, setUsers] = useState([]);
+
   const getAllUsers = () => {
-     AuthService.getAllUsers().then((res) => {
-       setUsers(res.data.data);
-     });
-  }
+    AuthService.getAllUsers().then((res) => {
+      setUsers(res.data.data);
+    });
+  };
   useEffect(() => {
     getAllUsers();
-  },[])
+  }, []);
   return (
     <EmployeeList
       employees={users}

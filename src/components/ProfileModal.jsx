@@ -8,13 +8,24 @@ const ProfileModal = ({
   handleOpen,
   department,
 }) => {
-  console.log(employeeData);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "auto"; // Prevent scrolling when the modal is open
     return () => {
       document.body.style.overflow = "auto"; // Restore scrolling when the component is unmounted
     };
   }, [open]);
+
+  const formatDate = (dateString) => {
+    const dateObject = new Date(dateString);
+
+    const options = {
+      year: "numeric",
+      month: "long", // Specify "long" for the full month name
+      day: "numeric",
+    };
+
+    return dateObject.toLocaleDateString("en-US", options);
+  };
 
   return (
     <div className={`fixed inset-0 overflow-y-auto ${open ? "" : "hidden"}`}>
@@ -58,7 +69,11 @@ const ProfileModal = ({
                 </h2>
                 <ul className="list-disc list-inside text-gray-600">
                   <li className="mb-2">
-                    <span className="font-bold">Salary:</span> $
+                    <span className="font-bold">Email: </span>
+                    {employeeData?.email}
+                  </li>
+                  <li className="mb-2">
+                    <span className="font-bold">Salary: </span> $
                     {employeeData?.salary}
                   </li>
                   <li className="mb-2">
@@ -71,16 +86,18 @@ const ProfileModal = ({
                   </li>
                   <li className="mb-2">
                     <span className="font-bold">Joining Date:</span>{" "}
-                    {employeeData?.createdAt}
+                    {formatDate(employeeData?.createdAt)}
                   </li>
                 </ul>
                 <div className="mt-6 flex items-center">
-                 {!department && <button
-                    onClick={() => handleOpen(employeeData)}
-                    className="bg-blue-500 text-white py-2 px-4 rounded-full hover:bg-blue-600 transition duration-300 ease-in-out"
-                  >
-                    Edit Profile
-                  </button>}
+                  {!department && (
+                    <button
+                      onClick={() => handleOpen(employeeData)}
+                      className="bg-blue-500 text-white py-2 px-4 rounded-full hover:bg-blue-600 transition duration-300 ease-in-out"
+                    >
+                      Edit Profile
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

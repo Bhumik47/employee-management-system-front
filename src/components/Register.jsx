@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -18,19 +18,6 @@ const Register = () => {
     const { name, value } = e.target;
     setuserdata({ ...userdata, [name]: value });
   };
-
-  useEffect(() => {
-    const checkCookie = () => {
-      const cookieValue = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token"));
-
-      if (cookieValue) {
-        navigate("/");
-      }
-    };
-    checkCookie();
-  }, [navigate]);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,7 +51,7 @@ const Register = () => {
       if (response.status === 201) {
         toast.success(response.data.message);
         navigate("/");
-         localStorage.setItem("user", JSON.stringify(response.data.user));
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       } else {
         console.error("Error submitting form:", response.statusText);
       }
@@ -167,7 +154,7 @@ const Register = () => {
                 <span
                   className=" cursor-pointer"
                   onClick={() => {
-                    navigate("/login");
+                    navigate("/");
                   }}
                 >
                   Login

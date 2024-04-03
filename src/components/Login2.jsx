@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -7,24 +7,12 @@ import AuthService from "../services/AuthService";
 
 const Login = () => {
   const [showpass, setshowpass] = useState(false);
+
   const navigate = useNavigate();
   const [userdata, setuserdata] = useState({
     email: "",
     password: "",
   });
-
-  useEffect(() => {
-    const checkCookie = () => {
-      const cookieValue = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token"));
-
-      if (cookieValue) {
-        navigate("/");
-      }
-    };
-    checkCookie();
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,18 +22,20 @@ const Login = () => {
       formData.append("password", userdata.password);
       const response = await AuthService.login(formData);
 
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+
       if (response.status === 200) {
         toast.success(response.data.message);
-        navigate("/");
-        localStorage.setItem(
-          'user',
-          JSON.stringify(response.data.user)
-        );
+        if (response.data.user.ismanager) {
+          navigate("/manager");
+        } else {
+          navigate("/employee");
+        }
       } else {
         console.error("Error while loggin in:", response.statusText);
       }
     } catch (error) {
-      //   toast.error(error.response.data.message);
+      toast.error(error.response.data.message);
       console.error("Error while loggin in:", error.message);
     }
   };
